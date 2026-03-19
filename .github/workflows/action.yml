@@ -5,7 +5,7 @@ on:
     branches:
       - main
 
-# Permessi per scrivere la tabella e pubblicare il sito
+# Permessi espliciti per scrivere nel repository
 permissions:
   contents: write
   pages: write
@@ -41,5 +41,7 @@ jobs:
           git push || echo "Niente da pushare"
 
       - name: 3. Costruisci e Pubblica il Sito Web
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdocs gh-deploy --force --clean
+          mkdocs gh-deploy --force --clean --remote-name origin --remote-branch gh-pages
