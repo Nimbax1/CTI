@@ -30,7 +30,6 @@ def clean_obsidian_link(raw_link):
 
 
 def build_vault_index():
-
     file_paths = {}
     file_targets = {}
 
@@ -60,13 +59,10 @@ def build_vault_index():
     return file_paths, file_targets
 
 
-def build_markdown_table():
-
+def build_markdown_table(paths_index, targets_index):
     if not os.path.exists(ACTORS_DIR):
         print(f"Cartella {ACTORS_DIR} non trovata!")
         return ""
-
-    paths_index, targets_index = build_vault_index()
 
     gruppi = defaultdict(list)
 
@@ -130,7 +126,6 @@ def build_markdown_table():
                 linked_tool = f"[{clean_name}](./{malware_path})"
 
                 tool_names.append(linked_tool)
-
                 tool_dates.append(str(raw_date)[:10])
 
             malware_str = "<br>".join(tool_names) if tool_names else "N/A"
@@ -140,11 +135,11 @@ def build_markdown_table():
             gruppi[paese].append(record)
 
     if not gruppi:
-        return "*No data Found.*"
+        return "*No data Found for Actors.*"
 
-    final_md = ""
+    final_md = "## Attori per Paese\n\n"
     for paese in sorted(gruppi.keys()):
-        final_md += f"## {paese}\n\n"
+        final_md += f"### {paese}\n\n"
         final_md += "| Actor | Tool/Malware | Date Detected | Activity | Target |\n"
         final_md += "|---|---|---|---|---|\n"
         final_md += "\n".join(gruppi[paese]) + "\n\n"
@@ -152,7 +147,117 @@ def build_markdown_table():
     return final_md
 
 
-def update_readme(new_table_md):
+def build_malware_table(paths_index):
+    if not os.path.exists(MALWARE_DIR):
+        print(f"Cartella {MALWARE_DIR} non trovata!")
+        return ""
+
+    flat_data = []
+
+    for filename in os.listdir(MALWARE_DIR):
+        if not filename.endswith('.md'): continue
+
+        filepath = os.path.join(MALWARE_DIR, filename)
+        basename = filename.replace('.md', '')
+        malware_link = f"[{basename}](./{paths_index.get(basename, filepath)})"
+
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = extract_yaml(f.read())
+
+        if not data: continue
+
+        # Gestione MainBranch
+        main_branch_raw = data.get('MainBranch', [])
+        if not isinstance(main_branch_raw, list): main_branch_raw = [main_branch_raw]
+        main_branch_str = ", ".join(str(b) for b in main_branch_raw if b)
+
+        # Filtro come in Dataview
+        if "DarkSword" not in main_branch_str:
+            continue
+
+        # Gestione Capabilities
+        capabilities_raw = data.get('capabilities', [])
+        if not isinstance(capabilities_raw, list): capabilities_raw = [capabilities_raw]
+        capabilities_str = ", ".join(str(c) for c in capabilities_raw if c) or "N/A"
+
+        all_dest_countries = set()
+        all_origins = set()
+        all_dates = set()
+        all_actors = set()
+
+        # Gestione Threat Actor e incrocio dati
+        threat_actors = data.get('threat_actor', [])
+        if not isinstance(threat_actors, list): threat_actors = [threat_actors]
+
+        for actor in threat_actors:
+            if not actor: continue
+
+            actor_clean = clean_obsidian_link(actor)
+            actor_path = paths_index.get(actor_clean, '#')
+            all_actors.add(f"[{actor_clean}](./{actor_path})")
+
+            # Estrai dati specifici dall'attore recuperandolo dall'indice del Vault
+            actor_rel_path = paths_index.get(actor_clean)
+            if actor_rel_path:
+                actor_real_path = os.path.join(VAULT_ROOT, actor_rel_path)
+                try:
+                    with open(actor_real_path, 'r', encoding='utf-8') as af:
+                        actor_data = extract_yaml(af.read())
+                except:
+                    actor_data = None
+
+                if actor_data:
+                    # Origine Attore
+                    origins = actor_data.get('origin', [])
+                    if not isinstance(origins, list): origins = [origins]
+                    for o in origins:
+                        if o: all_origins.add(str(o))
+
+                    # Campagne (Countries e Dates)
+                    campaigns = actor_data.get('campaigns', [])
+                    if not isinstance(campaigns, list): campaigns = [campaigns]
+
+                    for camp in campaigns:
+                        if not isinstance(camp, dict): continue
+
+                        country = camp.get('country')
+                        if country: all_dest_countries.add(str(country))
+
+                        tools = camp.get('tools', [])
+                        if not isinstance(tools, list): tools = [tools]
+
+                        for t in tools:
+                            if isinstance(t, dict):
+                                t_name = str(t.get('name', ''))
+                                t_date = str(t.get('date', 'N/A'))
+                            else:
+                                t_name = str(t)
+                                t_date = 'N/A'
+
+                            if "DarkSword" in t_name and t_date != 'N/A':
+                                all_dates.add(t_date[:10])
+
+        dest_str = ", ".join(sorted(list(all_dest_countries))) if all_dest_countries else "N/A"
+        orig_str = ", ".join(sorted(list(all_origins))) if all_origins else "N/A"
+        date_str = ", ".join(sorted(list(all_dates))) if all_dates else "N/A"
+        actor_str = ", ".join(sorted(list(all_actors))) if all_actors else "N/A"
+        mb_str = main_branch_str if main_branch_str else "N/A"
+
+        record = f"| {malware_link} | {dest_str} | {orig_str} | {date_str} | {actor_str} | {mb_str} | {capabilities_str} |"
+        flat_data.append(record)
+
+    if not flat_data:
+        return "*Nessun dato trovato per DarkSword.*"
+
+    final_md = "## TTP & Malware - DarkSword\n\n"
+    final_md += "| File Malware | Dest Countries | Origin | Date detection | Threat Actor | MainBranch | Capabilities |\n"
+    final_md += "|---|---|---|---|---|---|---|\n"
+    final_md += "\n".join(flat_data) + "\n\n"
+
+    return final_md
+
+
+def update_readme(new_content_md):
     if not os.path.exists(README_FILE):
         print(f"File {README_FILE} not found!")
         return
@@ -167,14 +272,28 @@ def update_readme(new_table_md):
         part_before = readme.split(start_marker)[0]
         part_after = readme.split(end_marker)[-1]
 
-        new_readme = part_before + start_marker + "\n\n" + new_table_md + "\n" + end_marker + part_after
+        # Inserisce tutto il blocco generato tra i due marker esistenti
+        new_readme = part_before + start_marker + "\n\n" + new_content_md + end_marker + part_after
 
         with open(README_FILE, 'w', encoding='utf-8') as f:
             f.write(new_readme)
         print("Done!")
     else:
-        print("Not Done! Check .md files")
+        print("Not Done! Marker <!-- TABELLA_START --> o <!-- TABELLA_END --> non trovati nel README.md.")
+
 
 if __name__ == "__main__":
-    markdown_output = build_markdown_table()
-    update_readme(markdown_output)
+    print("Indicizzazione del Vault in corso...")
+    paths_index, targets_index = build_vault_index()
+
+    print("Costruzione tabella Actors...")
+    actors_md = build_markdown_table(paths_index, targets_index)
+
+    print("Costruzione tabella Malware (DarkSword)...")
+    malware_md = build_malware_table(paths_index)
+
+    # Unisce le due tabelle separate da una riga divisoria
+    combined_md = actors_md + "---\n\n" + malware_md
+
+    print("Aggiornamento del README...")
+    update_readme(combined_md)
