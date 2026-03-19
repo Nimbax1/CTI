@@ -41,12 +41,17 @@ jobs:
           git commit -m "Auto-update: Tabella CTI [skip ci]" || true
           git push || true
 
-      - name: 3. website generation and deploy
+      - name: 3. Costruisci e Pubblica il Sito Web
         run: |
           mkdir -p docs
           cp README.md docs/index.md
           
           [ -d "Actors" ] && cp -r Actors docs/
           [ -d "TTP_&_Malware" ] && cp -r "TTP_&_Malware" docs/
+          [ -d "Reports" ] && cp -r Reports docs/
+          [ -d "Data" ] && cp -r Data docs/
+          
+          python expose_yaml.py
           
           mkdocs gh-deploy --force --clean
+
