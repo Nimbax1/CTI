@@ -25,8 +25,8 @@ Benvenuti nel mio report aggiornato in tempo reale sulle minacce globali.
 
 | Actor | Tool/Malware | Date Detected | Activity | Target |
 |---|---|---|---|---|
-| [UNC6353](./Actors/UNC6353.md) | [Coruna](./#)<br>[DarkSword](./TTP_&_Malware/DarkSword.md) | 2024-05-10<br>2025-12-01 | [GHOSTBLADE](./TTP_&_Malware/GHOSTBLADE.md) | Users |
 | [UNC6748](./Actors/UNC6748.md) | [DarkSword](./TTP_&_Malware/DarkSword.md) | 2025-12-01 | [GHOSTKNIFE](./TTP_&_Malware/GHOSTKNIFE.md) | Users |
+| [UNC6353](./Actors/UNC6353.md) | [Coruna](./#)<br>[DarkSword](./TTP_&_Malware/DarkSword.md) | 2024-05-10<br>2025-12-01 | [GHOSTBLADE](./TTP_&_Malware/GHOSTBLADE.md) | Users |
 
 
 <!-- TABELLA_END -->
