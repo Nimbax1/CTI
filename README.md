@@ -31,12 +31,12 @@
 
 ---
 
-## TTP & Malware - DarkSword
+## TTP & Malware (Tutti i MainBranch)
 
 | File Malware | Dest Countries | Origin | Date detection | Threat Actor | MainBranch | Capabilities |
 |---|---|---|---|---|---|---|
-| [GHOSTSABER](./TTP_&_Malware/GHOSTSABER.md) | Malaysia, Turkey | Turkey | 2025-12-01 | [PARS_Defense](./Actors/PARS_Defense.md) | [[DarkSword]] | account enumeration, Exfiltration, file listing |
-| [GHOSTBLADE](./TTP_&_Malware/GHOSTBLADE.md) | Ukraine | N/A | 2025-12-01 | [UNC6353](./Actors/UNC6353.md) | [[DarkSword]] | Exfiltration |
-| [GHOSTKNIFE](./TTP_&_Malware/GHOSTKNIFE.md) | Saudi Arabia, Ukraine | N/A | 2025-12-01 | [UNC6748](./Actors/UNC6748.md) | [[DarkSword]] | Exfiltration, Screen Capture, Audio Recording |
+| [GHOSTBLADE](./TTP_&_Malware/GHOSTBLADE.md) | Ukraine | N/A | N/A | [UNC6353](./Actors/UNC6353.md) | [[DarkSword]] | Exfiltration |
+| [GHOSTKNIFE](./TTP_&_Malware/GHOSTKNIFE.md) | Saudi Arabia, Ukraine | N/A | N/A | [UNC6748](./Actors/UNC6748.md) | [[DarkSword]] | Exfiltration, Screen Capture, Audio Recording |
+| [GHOSTSABER](./TTP_&_Malware/GHOSTSABER.md) | Malaysia, Turkey | Turkey | N/A | [PARS_Defense](./Actors/PARS_Defense.md) | [[DarkSword]] | account enumeration, Exfiltration, file listing |
 
 <!-- TABELLA_END -->
