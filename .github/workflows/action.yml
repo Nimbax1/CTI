@@ -49,9 +49,9 @@ jobs:
           [ -d "Actors" ] && cp -r Actors docs/
           [ -d "TTP_&_Malware" ] && cp -r "TTP_&_Malware" docs/
           [ -d "Reports" ] && cp -r Reports docs/
-          [ -d "Data" ] && cp -r Data docs/
+          [ -d "data" ] && cp -r data docs/
           
-          python expose_yaml.py
+          python expose_yml.py
           
           mkdocs gh-deploy --force --clean
 
