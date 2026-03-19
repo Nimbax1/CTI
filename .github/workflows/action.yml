@@ -1,1 +1,43 @@
-git commit -m "Auto-update: Vetrina CTI [skip ci]" || echo "Nessuna modifica"
+name: CTI Pipeline (Tabella + Sito Web)
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Installa i requisiti (Python + MkDocs)
+        run: |
+          pip install pyyaml mkdocs-material mkdocs-roamlinks
+
+      - name: 1. Genera la Tabella (Script Custom)
+        run: python generate_table.py
+
+      - name: 2. Salva il README aggiornato
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Auto-update: Tabella CTI [skip ci]" || echo "Nessuna modifica alla tabella"
+          git push || echo "Niente da pushare"
+
+      - name: 3. Costruisci e Pubblica il Sito Web
+        run: mkdocs gh-deploy --force
