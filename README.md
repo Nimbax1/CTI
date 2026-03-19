@@ -1,5 +1,4 @@
 # Portfolio Cyber Threat Intelligence
-Benvenuti nel mio report aggiornato in tempo reale sulle minacce globali.
 
 <!-- TABELLA_START -->
 
