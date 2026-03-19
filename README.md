@@ -2,7 +2,7 @@
 
 <!-- TABELLA_START -->
 
-## Attori per Paese
+## Actors by Country
 
 ### Malaysia
 
@@ -31,7 +31,7 @@
 
 ---
 
-## TTP & Malware (Tutti i MainBranch)
+## TTP & Malware (All MainBranches)
 
 | File Malware | Dest Countries | Origin | Date detection | Threat Actor | MainBranch | Capabilities |
 |---|---|---|---|---|---|---|
