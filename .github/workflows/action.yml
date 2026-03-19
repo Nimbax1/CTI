@@ -43,15 +43,10 @@ jobs:
 
       - name: 3. website generation and deploy
         run: |
-          # --- TRUCCO PER MKDOCS ---
-          # Creiamo una cartella 'docs' temporanea e ci copiamo i file
-          # così MkDocs non si lamenta del conflitto di cartelle
           mkdir -p docs
           cp README.md docs/index.md
           
-          # Copiamo le tue cartelle di analisi (se esistono)
           [ -d "Actors" ] && cp -r Actors docs/
           [ -d "TTP_&_Malware" ] && cp -r "TTP_&_Malware" docs/
           
-          # Lanciamo il deploy
           mkdocs gh-deploy --force --clean
