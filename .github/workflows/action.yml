@@ -5,6 +5,7 @@ on:
     branches:
       - main
 
+# Permessi per scrivere la tabella e pubblicare il sito
 permissions:
   contents: write
   pages: write
@@ -26,7 +27,7 @@ jobs:
 
       - name: Installa i requisiti (Python + MkDocs)
         run: |
-          pip install pyyaml mkdocs-material mkdocs-roamlinks
+          pip install pyyaml mkdocs-material mkdocs-roamlinks-plugin
 
       - name: 1. Genera la Tabella (Script Custom)
         run: python generate_table.py
@@ -40,4 +41,5 @@ jobs:
           git push || echo "Niente da pushare"
 
       - name: 3. Costruisci e Pubblica il Sito Web
-        run: mkdocs gh-deploy --force
+        run: |
+          mkdocs gh-deploy --force --clean
