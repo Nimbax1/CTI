@@ -26,8 +26,8 @@ def expose_yaml_in_docs():
 
                         if ':' in clean_line and not clean_line.startswith('-'):
                             parts = clean_line.split(':', 1)
-                            key = parts.strip()
-                            value = parts.strip()[1]
+                            key = parts[0].strip()
+                            value = parts[1].strip()
                             if value:
                                 box += f'    {spaces}**{key}**: {value}  \n'
                             else:
