@@ -9,13 +9,23 @@ MALWARE_DIR = "TTP_&_Malware"
 README_FILE = "README.md"
 
 
+def lower_dict_keys(x):
+    if isinstance(x, dict):
+        return {str(k).lower(): lower_dict_keys(v) for k, v in x.items()}
+    elif isinstance(x, list):
+        return [lower_dict_keys(v) for v in x]
+    else:
+        return x
+
+
 def extract_yaml(content):
     match = re.search(r'^---\s*(.*?)\s*---', content, re.DOTALL | re.MULTILINE)
     if match:
         try:
-            return yaml.safe_load(match.group(1))
+            parsed = yaml.safe_load(match.group(1))
+            return lower_dict_keys(parsed) if parsed else None
         except Exception as e:
-            print(f"Errore YAML: {e}")
+            print(f"YAML Error: {e}")
             return None
     return None
 
@@ -59,12 +69,12 @@ def build_vault_index():
     return file_paths, file_targets
 
 
-def build_markdown_table(paths_index, targets_index):
+def build_actors_table(paths_index, targets_index):
     if not os.path.exists(ACTORS_DIR):
-        print(f"Cartella {ACTORS_DIR} non trovata!")
+        print(f"Directory {ACTORS_DIR} not found!")
         return ""
 
-    gruppi = defaultdict(list)
+    groups = defaultdict(list)
 
     for filename in os.listdir(ACTORS_DIR):
         if not filename.endswith('.md'): continue
@@ -82,7 +92,7 @@ def build_markdown_table(paths_index, targets_index):
         if not isinstance(activity_raw, list): activity_raw = [activity_raw]
 
         activity_clean = []
-        targets_trovati = set()
+        found_targets = set()
 
         for act in activity_raw:
             if not act: continue
@@ -93,17 +103,19 @@ def build_markdown_table(paths_index, targets_index):
 
             if act_name in targets_index:
                 for t in targets_index[act_name]:
-                    targets_trovati.add(t)
+                    found_targets.add(t)
 
         activity_str = ", ".join(activity_clean) if activity_clean else "N/A"
-        final_targets = ", ".join(sorted(list(targets_trovati))) if targets_trovati else "N/A"
+        final_targets = ", ".join(sorted(list(found_targets))) if found_targets else "N/A"
 
         campaigns = data.get('campaigns', [])
         if not isinstance(campaigns, list): campaigns = [campaigns]
 
         for camp in campaigns:
-            paese = camp.get('country')
-            if not paese: continue
+            if not isinstance(camp, dict): continue
+
+            country = camp.get('country')
+            if not country: continue
 
             tools = camp.get('tools', [])
             if not isinstance(tools, list): tools = [tools]
@@ -132,24 +144,24 @@ def build_markdown_table(paths_index, targets_index):
             dates_str = "<br>".join(tool_dates) if tool_dates else "N/A"
 
             record = f"| {actor_link} | {malware_str} | {dates_str} | {activity_str} | {final_targets} |"
-            gruppi[paese].append(record)
+            groups[country].append(record)
 
-    if not gruppi:
-        return "*No data Found for Actors.*"
+    if not groups:
+        return "*No data found for Actors.*"
 
-    final_md = "## Attori per Paese\n\n"
-    for paese in sorted(gruppi.keys()):
-        final_md += f"### {paese}\n\n"
+    final_md = "## Actors by Country\n\n"
+    for country in sorted(groups.keys()):
+        final_md += f"### {country}\n\n"
         final_md += "| Actor | Tool/Malware | Date Detected | Activity | Target |\n"
         final_md += "|---|---|---|---|---|\n"
-        final_md += "\n".join(gruppi[paese]) + "\n\n"
+        final_md += "\n".join(groups[country]) + "\n\n"
 
     return final_md
 
 
 def build_malware_table(paths_index):
     if not os.path.exists(MALWARE_DIR):
-        print(f"Cartella {MALWARE_DIR} non trovata!")
+        print(f"Directory {MALWARE_DIR} not found!")
         return ""
 
     flat_data = []
@@ -166,7 +178,7 @@ def build_malware_table(paths_index):
 
         if not data: continue
 
-        main_branch_raw = data.get('MainBranch', [])
+        main_branch_raw = data.get('mainbranch', [])
         if not main_branch_raw:
             continue
 
@@ -227,7 +239,7 @@ def build_malware_table(paths_index):
                                 t_name = str(t)
                                 t_date = 'N/A'
 
-                            if clean_obsidian_link(t_name) == basename and t_date != 'N/A':
+                            if basename.lower() in t_name.lower() and t_date != 'N/A':
                                 all_dates.add(t_date[:10])
 
         dest_str = ", ".join(sorted(list(all_dest_countries))) if all_dest_countries else "N/A"
@@ -240,11 +252,11 @@ def build_malware_table(paths_index):
         flat_data.append((mb_str, basename, record))
 
     if not flat_data:
-        return "*Nessun dato trovato per i Malware.*"
+        return "*No data found for Malware.*"
 
     flat_data.sort(key=lambda x: (x[0], x[1]))
 
-    final_md = "## TTP & Malware (Tutti i MainBranch)\n\n"
+    final_md = "## TTP & Malware (All MainBranches)\n\n"
     final_md += "| File Malware | Dest Countries | Origin | Date detection | Threat Actor | MainBranch | Capabilities |\n"
     final_md += "|---|---|---|---|---|---|---|\n"
     for item in flat_data:
@@ -275,20 +287,20 @@ def update_readme(new_content_md):
             f.write(new_readme)
         print("Done!")
     else:
-        print("Not Done! Marker <!-- TABELLA_START --> o <!-- TABELLA_END --> non trovati nel README.md.")
+        print("Not Done! Markers <!-- TABELLA_START --> or <!-- TABELLA_END --> not found in README.md.")
 
 
 if __name__ == "__main__":
-    print("Indicizzazione del Vault in corso...")
+    print("Indexing Vault...")
     paths_index, targets_index = build_vault_index()
 
-    print("Costruzione tabella Actors...")
-    actors_md = build_markdown_table(paths_index, targets_index)
+    print("Building Actors table...")
+    actors_md = build_actors_table(paths_index, targets_index)
 
-    print("Costruzione tabella Malware...")
+    print("Building Malware table...")
     malware_md = build_malware_table(paths_index)
 
     combined_md = actors_md + "---\n\n" + malware_md
 
-    print("Aggiornamento del README...")
+    print("Updating README...")
     update_readme(combined_md)
