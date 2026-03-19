@@ -53,7 +53,8 @@ def build_vault_index():
                 basename = file.replace('.md', '')
 
                 rel_path = os.path.relpath(filepath, VAULT_ROOT).replace('\\', '/')
-                file_paths[basename] = rel_path
+
+                file_paths[basename.lower()] = rel_path
 
                 try:
                     with open(filepath, 'r', encoding='utf-8') as f:
@@ -62,7 +63,7 @@ def build_vault_index():
                             targets = data['target_industry']
                             if not isinstance(targets, list):
                                 targets = [targets]
-                            file_targets[basename] = [str(t) for t in targets if t]
+                            file_targets[basename.lower()] = [str(t) for t in targets if t]
                 except:
                     pass
 
@@ -81,7 +82,7 @@ def build_actors_table(paths_index, targets_index):
 
         filepath = os.path.join(ACTORS_DIR, filename)
         actor_basename = filename.replace('.md', '')
-        actor_link = f"[{actor_basename}](./{paths_index.get(actor_basename, filepath)})"
+        actor_link = f"[{actor_basename}](./{paths_index.get(actor_basename.lower(), filepath)})"
 
         with open(filepath, 'r', encoding='utf-8') as f:
             data = extract_yaml(f.read())
@@ -98,11 +99,11 @@ def build_actors_table(paths_index, targets_index):
             if not act: continue
             act_name = clean_obsidian_link(act)
 
-            act_path = paths_index.get(act_name, '#')
+            act_path = paths_index.get(act_name.lower(), '#')
             activity_clean.append(f"[{act_name}](./{act_path})")
 
-            if act_name in targets_index:
-                for t in targets_index[act_name]:
+            if act_name.lower() in targets_index:
+                for t in targets_index[act_name.lower()]:
                     found_targets.add(t)
 
         activity_str = ", ".join(activity_clean) if activity_clean else "N/A"
@@ -134,7 +135,7 @@ def build_actors_table(paths_index, targets_index):
                 if not raw_name: continue
 
                 clean_name = clean_obsidian_link(raw_name)
-                malware_path = paths_index.get(clean_name, '#')
+                malware_path = paths_index.get(clean_name.lower(), '#')
                 linked_tool = f"[{clean_name}](./{malware_path})"
 
                 tool_names.append(linked_tool)
@@ -171,7 +172,7 @@ def build_malware_table(paths_index):
 
         filepath = os.path.join(MALWARE_DIR, filename)
         basename = filename.replace('.md', '')
-        malware_link = f"[{basename}](./{paths_index.get(basename, filepath)})"
+        malware_link = f"[{basename}](./{paths_index.get(basename.lower(), filepath)})"
 
         with open(filepath, 'r', encoding='utf-8') as f:
             data = extract_yaml(f.read())
@@ -183,7 +184,9 @@ def build_malware_table(paths_index):
             continue
 
         if not isinstance(main_branch_raw, list): main_branch_raw = [main_branch_raw]
-        main_branch_str = ", ".join(str(b) for b in main_branch_raw if b)
+
+        clean_main_branches = [clean_obsidian_link(str(b)) for b in main_branch_raw if b]
+        main_branch_str = ", ".join(clean_main_branches)
 
         capabilities_raw = data.get('capabilities', [])
         if not isinstance(capabilities_raw, list): capabilities_raw = [capabilities_raw]
@@ -201,10 +204,10 @@ def build_malware_table(paths_index):
             if not actor: continue
 
             actor_clean = clean_obsidian_link(actor)
-            actor_path = paths_index.get(actor_clean, '#')
+            actor_path = paths_index.get(actor_clean.lower(), '#')
             all_actors.add(f"[{actor_clean}](./{actor_path})")
 
-            actor_rel_path = paths_index.get(actor_clean)
+            actor_rel_path = paths_index.get(actor_clean.lower())
             if actor_rel_path:
                 actor_real_path = os.path.join(VAULT_ROOT, actor_rel_path)
                 try:
@@ -239,7 +242,16 @@ def build_malware_table(paths_index):
                                 t_name = str(t)
                                 t_date = 'N/A'
 
-                            if basename.lower() in t_name.lower() and t_date != 'N/A':
+                            is_match = False
+                            if basename.lower() in t_name.lower():
+                                is_match = True
+                            else:
+                                for mb in clean_main_branches:
+                                    if mb and mb.lower() in t_name.lower():
+                                        is_match = True
+                                        break
+
+                            if is_match and t_date != 'N/A':
                                 all_dates.add(t_date[:10])
 
         dest_str = ", ".join(sorted(list(all_dest_countries))) if all_dest_countries else "N/A"
