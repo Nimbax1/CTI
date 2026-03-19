@@ -166,16 +166,13 @@ def build_malware_table(paths_index):
 
         if not data: continue
 
-        # Gestione MainBranch
         main_branch_raw = data.get('MainBranch', [])
+        if not main_branch_raw:
+            continue
+
         if not isinstance(main_branch_raw, list): main_branch_raw = [main_branch_raw]
         main_branch_str = ", ".join(str(b) for b in main_branch_raw if b)
 
-        # Filtro come in Dataview
-        if "DarkSword" not in main_branch_str:
-            continue
-
-        # Gestione Capabilities
         capabilities_raw = data.get('capabilities', [])
         if not isinstance(capabilities_raw, list): capabilities_raw = [capabilities_raw]
         capabilities_str = ", ".join(str(c) for c in capabilities_raw if c) or "N/A"
@@ -185,7 +182,6 @@ def build_malware_table(paths_index):
         all_dates = set()
         all_actors = set()
 
-        # Gestione Threat Actor e incrocio dati
         threat_actors = data.get('threat_actor', [])
         if not isinstance(threat_actors, list): threat_actors = [threat_actors]
 
@@ -196,7 +192,6 @@ def build_malware_table(paths_index):
             actor_path = paths_index.get(actor_clean, '#')
             all_actors.add(f"[{actor_clean}](./{actor_path})")
 
-            # Estrai dati specifici dall'attore recuperandolo dall'indice del Vault
             actor_rel_path = paths_index.get(actor_clean)
             if actor_rel_path:
                 actor_real_path = os.path.join(VAULT_ROOT, actor_rel_path)
@@ -207,13 +202,11 @@ def build_malware_table(paths_index):
                     actor_data = None
 
                 if actor_data:
-                    # Origine Attore
                     origins = actor_data.get('origin', [])
                     if not isinstance(origins, list): origins = [origins]
                     for o in origins:
                         if o: all_origins.add(str(o))
 
-                    # Campagne (Countries e Dates)
                     campaigns = actor_data.get('campaigns', [])
                     if not isinstance(campaigns, list): campaigns = [campaigns]
 
@@ -234,7 +227,7 @@ def build_malware_table(paths_index):
                                 t_name = str(t)
                                 t_date = 'N/A'
 
-                            if "DarkSword" in t_name and t_date != 'N/A':
+                            if clean_obsidian_link(t_name) == basename and t_date != 'N/A':
                                 all_dates.add(t_date[:10])
 
         dest_str = ", ".join(sorted(list(all_dest_countries))) if all_dest_countries else "N/A"
@@ -244,15 +237,19 @@ def build_malware_table(paths_index):
         mb_str = main_branch_str if main_branch_str else "N/A"
 
         record = f"| {malware_link} | {dest_str} | {orig_str} | {date_str} | {actor_str} | {mb_str} | {capabilities_str} |"
-        flat_data.append(record)
+        flat_data.append((mb_str, basename, record))
 
     if not flat_data:
-        return "*Nessun dato trovato per DarkSword.*"
+        return "*Nessun dato trovato per i Malware.*"
 
-    final_md = "## TTP & Malware - DarkSword\n\n"
+    flat_data.sort(key=lambda x: (x[0], x[1]))
+
+    final_md = "## TTP & Malware (Tutti i MainBranch)\n\n"
     final_md += "| File Malware | Dest Countries | Origin | Date detection | Threat Actor | MainBranch | Capabilities |\n"
     final_md += "|---|---|---|---|---|---|---|\n"
-    final_md += "\n".join(flat_data) + "\n\n"
+    for item in flat_data:
+        final_md += item[2] + "\n"
+    final_md += "\n"
 
     return final_md
 
@@ -272,7 +269,6 @@ def update_readme(new_content_md):
         part_before = readme.split(start_marker)[0]
         part_after = readme.split(end_marker)[-1]
 
-        # Inserisce tutto il blocco generato tra i due marker esistenti
         new_readme = part_before + start_marker + "\n\n" + new_content_md + end_marker + part_after
 
         with open(README_FILE, 'w', encoding='utf-8') as f:
@@ -289,10 +285,9 @@ if __name__ == "__main__":
     print("Costruzione tabella Actors...")
     actors_md = build_markdown_table(paths_index, targets_index)
 
-    print("Costruzione tabella Malware (DarkSword)...")
+    print("Costruzione tabella Malware...")
     malware_md = build_malware_table(paths_index)
 
-    # Unisce le due tabelle separate da una riga divisoria
     combined_md = actors_md + "---\n\n" + malware_md
 
     print("Aggiornamento del README...")
