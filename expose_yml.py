@@ -1,5 +1,29 @@
 import os
 import re
+import yaml
+
+
+def format_value(val):
+    if val is None or val == "" or val == []:
+        return ""
+
+    if isinstance(val, (str, int, float)):
+        return str(val)
+
+    if isinstance(val, list):
+        res = []
+        for item in val:
+            if isinstance(item, dict):
+                dict_str = ", ".join(f"*{k}*: {format_value(v)}" for k, v in item.items())
+                res.append(f"• {dict_str}")
+            else:
+                res.append(f"• {item}")
+        return "<br>".join(res)
+
+    if isinstance(val, dict):
+        return "<br>".join(f"*{k}*: {format_value(v)}" for k, v in val.items())
+
+    return str(val)
 
 
 def expose_yaml_in_docs():
@@ -15,31 +39,29 @@ def expose_yaml_in_docs():
                     yaml_content = match.group(1)
                     rest_of_content = match.group(2)
 
-                    box = '??? abstract "Proprietà CTI (Clicca per espandere)"\n'
-                    for line in yaml_content.split('\n'):
-                        indent = len(line) - len(line.lstrip())
-                        spaces = ' ' * indent
-                        clean_line = line.strip()
-
-                        if not clean_line:
+                    try:
+                        data = yaml.safe_load(yaml_content)
+                        if not isinstance(data, dict):
                             continue
 
-                        if ':' in clean_line and not clean_line.startswith('-'):
-                            parts = clean_line.split(':', 1)
-                            key = parts[0].strip()
-                            value = parts[1].strip()
-                            if value:
-                                box += f'    {spaces}**{key}**: {value}  \n'
-                            else:
-                                box += f'    {spaces}**{key}**:  \n'
-                        else:
-                            box += f'    {spaces}{clean_line}  \n'
+                        box = '??? abstract "Proprietà CTI (Clicca per espandere)"\n'
+                        box += '    | Proprietà | Dettagli |\n'
+                        box += '    |-----------|----------|\n'
 
-                    box += '\n\n'
+                        for key, value in data.items():
+                            formatted_val = format_value(value)
+                            formatted_val = str(formatted_val).replace("\n", " ").replace("\r", "")
 
-                    new_content = f"---\n{yaml_content}\n---\n\n{box}{rest_of_content}"
-                    with open(filepath, 'w', encoding='utf-8') as f:
-                        f.write(new_content)
+                            box += f'    | **{key}** | {formatted_val} |\n'
+
+                        box += '\n\n'
+
+                        new_content = f"---\n{yaml_content}\n---\n\n{box}{rest_of_content}"
+                        with open(filepath, 'w', encoding='utf-8') as f:
+                            f.write(new_content)
+
+                    except yaml.YAMLError:
+                        pass
 
 
 if __name__ == '__main__':

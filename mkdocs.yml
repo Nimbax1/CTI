@@ -32,5 +32,5 @@ nav:
   - Tutti i Report: 
       - TTP & Malware: TTP_&_Malware/
       - Actors: Actors/
-      - Reports: 01_reports/
-      - Data: Data/
+      - Reports: Reports/
+      - Data: data/
