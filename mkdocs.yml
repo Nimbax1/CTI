@@ -1,9 +1,9 @@
-site_name: CTI
-site_description:
-site_author: Lorenzo
+site_name: Defenda Lab - CTI Intelligence
+site_description: "Report aggiornati su Threat Actors e TTPs"
+site_author: "Lorenzo"
 
-docs_dir: '.'
-site_dir: 'site'
+docs_dir: 'docs'
+
 theme:
   name: material
   palette:
@@ -28,6 +28,7 @@ markdown_extensions:
       anchor_linenums: true
 
 nav:
-  - Home: README.md
-  - Threat Actors: Actors/
-  - Malware & TTP: TTP_&_Malware/
+  - Home: index.md
+  - Tutti i Report: 
+      - TTP & Malware: TTP_&_Malware/
+      - Actors: Actors/
