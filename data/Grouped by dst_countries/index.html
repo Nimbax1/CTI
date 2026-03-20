@@ -422,120 +422,78 @@
 
   <h1>Grouped by dst countries</h1>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let pages = dv.pages(&#39;&quot;Actors&quot;&#39;);
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let pages = dv.pages(&#39;&quot;TTP_&amp;_Malware&quot;&#39;);
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>let flatData = [];
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>for (let p of pages) {
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    if (!p.campaigns) continue;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    let activity = Array.isArray(p.activity) ? p.activity.join(&quot;, &quot;) : (p.activity || &quot;N/A&quot;);
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    let targetsTrovati = new Set();
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    let activityLinks = Array.isArray(p.activity) ? p.activity : (p.activity ? [p.activity] : []);
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    let countries = [];
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    if (p.dst_countries) {
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        countries = Array.isArray(p.dst_countries) ? p.dst_countries : [p.dst_countries];
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    } else {
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        continue;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    }
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    for (let link of activityLinks) {
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        let path = &quot;&quot;;
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        if (link.path) {
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>            path = link.path;
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        } else if (typeof link === &quot;string&quot;) {
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>            path = link.replace(/\[\[|\]\]/g, &quot;&quot;);
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        }
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        if (path) {
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>            let activityPage = dv.page(path);
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>            if (activityPage &amp;&amp; activityPage.target_industry) {
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>                let targets = Array.isArray(activityPage.target_industry) 
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>                    ? activityPage.target_industry 
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>                    : [activityPage.target_industry];
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>                for (let t of targets) {
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>                    targetsTrovati.add(String(t));
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>                }
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>            }
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        }
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    }
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    let finalTargets = targetsTrovati.size &gt; 0 ? Array.from(targetsTrovati).join(&quot;, &quot;) : &quot;N/A&quot;;
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    let campaigns = Array.isArray(p.campaigns) ? p.campaigns : [p.campaigns];
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    let actors = [];
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    if (p.threat_actor) {
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        actors = Array.isArray(p.threat_actor) ? p.threat_actor : [p.threat_actor];
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    } else {
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        actors = [&quot;Unknown Actor&quot;];
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    }
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    let activityName = p.file.link; 
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    let date = &quot;N/A&quot;;
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    if (p.date_detection) {
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        date = p.date_detection.toISODate ? p.date_detection.toISODate() : String(p.date_detection).substring(0, 10);
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    }
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    let mb = p.MainBranch ? (Array.isArray(p.MainBranch) ? p.MainBranch.join(&quot;, &quot;) : String(p.MainBranch)) : &quot;N/A&quot;;
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    let target = p.target_industry ? (Array.isArray(p.target_industry) ? p.target_industry.join(&quot;, &quot;) : String(p.target_industry)) : &quot;N/A&quot;;
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    for (let c of countries) {
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        let countryName = String(c).trim();
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        if (!countryName) continue;
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        for (let a of actors) {
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>            let actorLink = String(a).trim();
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    for (let camp of campaigns) {
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        if (!camp.country) continue;
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        let toolNames = [];
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        let toolDates = [];
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        if (camp.tools) {
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>            let toolsArray = Array.isArray(camp.tools) ? camp.tools : [camp.tools];
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>            for (let t of toolsArray) {
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>                if (typeof t === &quot;object&quot; &amp;&amp; t.name) {
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>                    let toolName = &quot;&quot;;
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>                    if (typeof t.name === &quot;object&quot; &amp;&amp; t.name.path) {
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>                        let cleanName = t.name.path.split(&#39;/&#39;).pop().replace(/\.md$/i, &quot;&quot;);
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>                        toolName = `[[${t.name.path}|${cleanName}]]`;
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>                    } else {
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>                        let strName = String(t.name);
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>                        let cleanPath = strName.replace(/\[\[|\]\]/g, &quot;&quot;);
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>                        let cleanName = cleanPath.split(&#39;/&#39;).pop().replace(/\.md$/i, &quot;&quot;);
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>                        toolName = `[[${cleanPath}|${cleanName}]]`;
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>                    }
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>                    let toolDate = &quot;N/A&quot;;
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>                    if (t.date) {
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>                        if (t.date.toISODate) {
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>                            toolDate = t.date.toISODate(); 
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>                        } else {
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>                            toolDate = String(t.date).substring(0, 10);
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>                        }
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>                    }
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>                    toolNames.push(toolName);
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>                    toolDates.push(toolDate);
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>                } 
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>                else {
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>                    let toolName = &quot;&quot;;
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>                    if (typeof t === &quot;object&quot; &amp;&amp; t.path) {
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>                        let cleanName = t.path.split(&#39;/&#39;).pop().replace(/\.md$/i, &quot;&quot;);
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>                        toolName = `[[${t.path}|${cleanName}]]`;
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>                    } else {
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>                        let strName = String(t);
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>                        let cleanPath = strName.replace(/\[\[|\]\]/g, &quot;&quot;);
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>                        let cleanName = cleanPath.split(&#39;/&#39;).pop().replace(/\.md$/i, &quot;&quot;);
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>                        toolName = `[[${cleanPath}|${cleanName}]]`;
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>                    }
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>                    toolNames.push(toolName);
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>                    toolDates.push(&quot;N/A&quot;); 
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>                }
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>            }
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>        }
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>        flatData.push({
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>            paese:      String(camp.country),
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>            attore:     p.file.link,
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>            malware:    toolNames.length &gt; 0 ? toolNames.join(&quot;&lt;br&gt;&quot;) : &quot;N/A&quot;,
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>            date_tools: toolDates.length &gt; 0 ? toolDates.join(&quot;&lt;br&gt;&quot;) : &quot;N/A&quot;,
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>            activity:   activity,   
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>            target:     finalTargets
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>        });
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>    }
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>}
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>let gruppi = {};
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>for (let item of flatData) {
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    if (!gruppi[item.paese]) gruppi[item.paese] = [];
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    gruppi[item.paese].push(item);
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>}
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>if (Object.keys(gruppi).length === 0) {
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>    dv.paragraph(&quot; Nessun dato trovato.&quot;);
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>}
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>for (let paese in gruppi) {
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>    dv.header(2, paese);
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>    dv.table(
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>        [&quot;Actor&quot;, &quot;Tool/Malware&quot;, &quot;Date Detected&quot;, &quot;Activity&quot;, &quot;Target&quot;],
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>        gruppi[paese].map(row =&gt; [row.attore, row.malware, row.date_tools, row.activity, row.target])
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>    );
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>}
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>            flatData.push({
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>                country: countryName,
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>                actor: actorLink,
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>                activity: activityName,
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>                date: date,
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>                mainBranch: mb,
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>                target: target
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>            });
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>        }
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    }
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>}
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>let gruppi = {};
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>for (let item of flatData) {
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    if (!gruppi[item.country]) gruppi[item.country] = {};
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    if (!gruppi[item.country][item.actor]) gruppi[item.country][item.actor] = [];
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    gruppi[item.country][item.actor].push(item);
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>}
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>if (Object.keys(gruppi).length === 0) {
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    dv.paragraph(&quot;Nessun dato trovato.&quot;);
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>}
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>for (let country of Object.keys(gruppi).sort()) {
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    dv.header(2, country);
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    let rows = [];
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    for (let actor of Object.keys(gruppi[country]).sort()) {
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>        let items = gruppi[country][actor];
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>        let activities = items.map(i =&gt; i.activity).join(&quot;&lt;br&gt;&quot;);
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>        let dates      = items.map(i =&gt; i.date).join(&quot;&lt;br&gt;&quot;);
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>        let mbs        = items.map(i =&gt; i.mainBranch).join(&quot;&lt;br&gt;&quot;);
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>        let targets    = items.map(i =&gt; i.target).join(&quot;&lt;br&gt;&quot;);
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>        rows.push([actor, activities, dates, mbs, targets]);
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    }
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    dv.table([&quot;Actor&quot;, &quot;Activity&quot;, &quot;Date&quot;, &quot;MainBranch&quot;, &quot;Target&quot;], rows);
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>}
 </code></pre></div>
 
 
