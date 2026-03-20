@@ -1,5 +1,5 @@
-site_name: CTI Intelligence
-site_description: "Report aggiornati su Threat Actors e TTPs"
+site_name: CTI
+site_description: "Report CTI"
 site_author: "Lorenzo"
 
 docs_dir: 'docs'
