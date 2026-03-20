@@ -6,7 +6,7 @@
 
 | File Malware | Dest Countries | Origin | Date detection | Threat Actor | MainBranch | Capabilities |
 |---|---|---|---|---|---|---|
-| [Coruna](./TTP_&_Malware/Coruna.md) | Ukraine | N/A | 2025-11-01 | [UNC6353](./Actors/UNC6353.md) | N/A | N/A |
+| [Coruna](./TTP_&_Malware/Coruna.md) | Ukraine | Russian  (suspected), China, Government-Backed | 2025-02-01 | [UNC6353](./Actors/UNC6353.md), [UNC6691](./Actors/UNC6691.md) | N/A | Exfiltration |
 | [DarkSword](./TTP_&_Malware/DarkSword.md) | N/A | N/A | N/A | N/A | N/A | N/A |
 | [GHOSTBLADE](./TTP_&_Malware/GHOSTBLADE.md) | Ukraine | N/A | 2025-12-01 | [UNC6353](./Actors/UNC6353.md) | [DarkSword](./TTP_&_Malware/DarkSword.md) | Exfiltration |
 | [GHOSTKNIFE](./TTP_&_Malware/GHOSTKNIFE.md) | Saudi Arabia | N/A | 2025-12-01 | [UNC6748](./Actors/UNC6748.md) | [DarkSword](./TTP_&_Malware/DarkSword.md) | Exfiltration, Screen Capture, Audio Recording |
@@ -38,6 +38,7 @@
 
 | Actor | Activity | Date | MainBranch | Target |
 |---|---|---|---|---|
-| [UNC6353](./Actors/UNC6353.md) | [Coruna](./TTP_&_Malware/Coruna.md)<br>[GHOSTBLADE](./TTP_&_Malware/GHOSTBLADE.md) | 2025-11-01<br>2025-12-01 | N/A<br>[DarkSword](./TTP_&_Malware/DarkSword.md) | Users<br>Users |
+| [UNC6353](./Actors/UNC6353.md) | [Coruna](./TTP_&_Malware/Coruna.md)<br>[GHOSTBLADE](./TTP_&_Malware/GHOSTBLADE.md) | 2025-02-01<br>2025-12-01 | N/A<br>[DarkSword](./TTP_&_Malware/DarkSword.md) | Users<br>Users |
+| [UNC6691](./Actors/UNC6691.md) | [Coruna](./TTP_&_Malware/Coruna.md) | 2025-02-01 | N/A | Users |
 
 <!-- TABELLA_END -->
