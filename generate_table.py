@@ -4,7 +4,6 @@ import yaml
 from collections import defaultdict
 
 VAULT_ROOT = "."
-ACTORS_DIR = "Actors"
 MALWARE_DIR = "TTP_&_Malware"
 README_FILE = "README.md"
 
@@ -23,260 +22,168 @@ def extract_yaml(content):
     if match:
         try:
             parsed = yaml.safe_load(match.group(1))
-            return lower_dict_keys(parsed) if parsed else None
-        except Exception as e:
-            print(f"YAML Error: {e}")
-            return None
-    return None
+            return lower_dict_keys(parsed) if parsed else {}
+        except:
+            return {}
+    return {}
 
 
-def clean_obsidian_link(raw_link):
-    link_str = str(raw_link).strip()
-    match = re.search(r'\[\[(.*?)(?:\|.*?)?\]\]', link_str)
-    if match:
-        clean_name = match.group(1).split('/')[-1].replace('.md', '')
-        return clean_name
-    return link_str.replace('[[', '').replace(']]', '')
+def parse_array(val):
+    if not val: return []
+    if isinstance(val, list): return val
+    return [val]
+
+
+def clean_link(val):
+    if not val: return "N/A"
+    val = str(val).strip()
+    m = re.search(r'\[\[(.*?)(?:\|.*?)?\]\]', val)
+    if m: return m.group(1).split('/')[-1].replace('.md', '')
+    return val.replace('[[', '').replace(']]', '')
+
+
+def make_md_link(raw_val, paths_index):
+    if not raw_val: return "N/A"
+    clean = clean_link(raw_val)
+    if clean.lower() in paths_index:
+        return f"[{clean}](./{paths_index[clean.lower()]})"
+    return clean
 
 
 def build_vault_index():
-    file_paths = {}
-    file_targets = {}
-
-    for root, dirs, files in os.walk(VAULT_ROOT):
-        if '.git' in root or '.obsidian' in root:
-            continue
-
-        for file in files:
-            if file.endswith('.md'):
-                filepath = os.path.join(root, file)
-                basename = file.replace('.md', '')
-
-                rel_path = os.path.relpath(filepath, VAULT_ROOT).replace('\\', '/')
-
-                file_paths[basename.lower()] = rel_path
-
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        data = extract_yaml(f.read())
-                        if data and 'target_industry' in data:
-                            targets = data['target_industry']
-                            if not isinstance(targets, list):
-                                targets = [targets]
-                            file_targets[basename.lower()] = [str(t) for t in targets if t]
-                except:
-                    pass
-
-    return file_paths, file_targets
-
-
-def build_actors_table(paths_index, targets_index):
-    if not os.path.exists(ACTORS_DIR):
-        print(f"Directory {ACTORS_DIR} not found!")
-        return ""
-
-    groups = defaultdict(list)
-
-    for filename in os.listdir(ACTORS_DIR):
-        if not filename.endswith('.md'): continue
-
-        filepath = os.path.join(ACTORS_DIR, filename)
-        actor_basename = filename.replace('.md', '')
-        actor_link = f"[{actor_basename}](./{paths_index.get(actor_basename.lower(), filepath)})"
-
-        with open(filepath, 'r', encoding='utf-8') as f:
-            data = extract_yaml(f.read())
-
-        if not data or 'campaigns' not in data: continue
-
-        activity_raw = data.get('activity', [])
-        if not isinstance(activity_raw, list): activity_raw = [activity_raw]
-
-        activity_clean = []
-        found_targets = set()
-
-        for act in activity_raw:
-            if not act: continue
-            act_name = clean_obsidian_link(act)
-
-            act_path = paths_index.get(act_name.lower(), '#')
-            activity_clean.append(f"[{act_name}](./{act_path})")
-
-            if act_name.lower() in targets_index:
-                for t in targets_index[act_name.lower()]:
-                    found_targets.add(t)
-
-        activity_str = ", ".join(activity_clean) if activity_clean else "N/A"
-        final_targets = ", ".join(sorted(list(found_targets))) if found_targets else "N/A"
-
-        campaigns = data.get('campaigns', [])
-        if not isinstance(campaigns, list): campaigns = [campaigns]
-
-        for camp in campaigns:
-            if not isinstance(camp, dict): continue
-
-            country = camp.get('country')
-            if not country: continue
-
-            tools = camp.get('tools', [])
-            if not isinstance(tools, list): tools = [tools]
-
-            tool_names = []
-            tool_dates = []
-
-            for t in tools:
-                if isinstance(t, dict) and 'name' in t:
-                    raw_name = t.get('name', '')
-                    raw_date = t.get('date', 'N/A')
-                else:
-                    raw_name = str(t)
-                    raw_date = "N/A"
-
-                if not raw_name: continue
-
-                clean_name = clean_obsidian_link(raw_name)
-                malware_path = paths_index.get(clean_name.lower(), '#')
-                linked_tool = f"[{clean_name}](./{malware_path})"
-
-                tool_names.append(linked_tool)
-                tool_dates.append(str(raw_date)[:10])
-
-            malware_str = "<br>".join(tool_names) if tool_names else "N/A"
-            dates_str = "<br>".join(tool_dates) if tool_dates else "N/A"
-
-            record = f"| {actor_link} | {malware_str} | {dates_str} | {activity_str} | {final_targets} |"
-            groups[country].append(record)
-
-    if not groups:
-        return "*No data found for Actors.*"
-
-    final_md = "## Actors by Country\n\n"
-    for country in sorted(groups.keys()):
-        final_md += f"### {country}\n\n"
-        final_md += "| Actor | Tool/Malware | Date Detected | Activity | Target |\n"
-        final_md += "|---|---|---|---|---|\n"
-        final_md += "\n".join(groups[country]) + "\n\n"
-
-    return final_md
-
+    idx = {}
+    for root, _, files in os.walk(VAULT_ROOT):
+        if '.git' in root or '.obsidian' in root: continue
+        for f in files:
+            if f.endswith('.md'):
+                idx[f[:-3].lower()] = os.path.relpath(os.path.join(root, f), VAULT_ROOT).replace('\\', '/')
+    return idx
 
 def build_malware_table(paths_index):
     if not os.path.exists(MALWARE_DIR):
-        print(f"Directory {MALWARE_DIR} not found!")
-        return ""
+        return "Nessun dato trovato in TTP_&_Malware"
 
     flat_data = []
 
     for filename in os.listdir(MALWARE_DIR):
         if not filename.endswith('.md'): continue
+        if filename.lower() == 'index.md': continue
 
         filepath = os.path.join(MALWARE_DIR, filename)
-        basename = filename.replace('.md', '')
-        malware_link = f"[{basename}](./{paths_index.get(basename.lower(), filepath)})"
+        basename = filename[:-3]
 
         with open(filepath, 'r', encoding='utf-8') as f:
             data = extract_yaml(f.read())
-
         if not data: continue
 
-        main_branch_raw = data.get('mainbranch', [])
-        if not main_branch_raw:
-            continue
+        mb = parse_array(data.get('mainbranch'))
+        mb_str = ", ".join(make_md_link(x, paths_index) for x in mb) if mb else "N/A"
 
-        if not isinstance(main_branch_raw, list): main_branch_raw = [main_branch_raw]
+        cap = parse_array(data.get('capabilities'))
+        cap_str = ", ".join(str(x) for x in cap) if cap else "N/A"
 
-        clean_main_branches = [clean_obsidian_link(str(b)) for b in main_branch_raw if b]
-        main_branch_str = ", ".join(clean_main_branches)
+        dst = parse_array(data.get('dst_countries'))
+        dst_str = ", ".join(str(x) for x in dst) if dst else "N/A"
 
-        capabilities_raw = data.get('capabilities', [])
-        if not isinstance(capabilities_raw, list): capabilities_raw = [capabilities_raw]
-        capabilities_str = ", ".join(str(c) for c in capabilities_raw if c) or "N/A"
+        orig = parse_array(data.get('origin'))
+        orig_str = ", ".join(str(x) for x in orig) if orig else "N/A"
 
-        all_dest_countries = set()
-        all_origins = set()
-        all_dates = set()
-        all_actors = set()
+        act = parse_array(data.get('threat_actor'))
+        act_str = ", ".join(make_md_link(x, paths_index) for x in act) if act else "N/A"
 
-        threat_actors = data.get('threat_actor', [])
-        if not isinstance(threat_actors, list): threat_actors = [threat_actors]
+        date_raw = data.get('date_detection')
+        date_str = str(date_raw)[:10] if date_raw else "N/A"
 
-        for actor in threat_actors:
-            if not actor: continue
+        file_link = f"[{basename}](./{paths_index.get(basename.lower(), filepath)})"
 
-            actor_clean = clean_obsidian_link(actor)
-            actor_path = paths_index.get(actor_clean.lower(), '#')
-            all_actors.add(f"[{actor_clean}](./{actor_path})")
-
-            actor_rel_path = paths_index.get(actor_clean.lower())
-            if actor_rel_path:
-                actor_real_path = os.path.join(VAULT_ROOT, actor_rel_path)
-                try:
-                    with open(actor_real_path, 'r', encoding='utf-8') as af:
-                        actor_data = extract_yaml(af.read())
-                except:
-                    actor_data = None
-
-                if actor_data:
-                    origins = actor_data.get('origin', [])
-                    if not isinstance(origins, list): origins = [origins]
-                    for o in origins:
-                        if o: all_origins.add(str(o))
-
-                    campaigns = actor_data.get('campaigns', [])
-                    if not isinstance(campaigns, list): campaigns = [campaigns]
-
-                    for camp in campaigns:
-                        if not isinstance(camp, dict): continue
-
-                        country = camp.get('country')
-                        if country: all_dest_countries.add(str(country))
-
-                        tools = camp.get('tools', [])
-                        if not isinstance(tools, list): tools = [tools]
-
-                        for t in tools:
-                            if isinstance(t, dict):
-                                t_name = str(t.get('name', ''))
-                                t_date = str(t.get('date', 'N/A'))
-                            else:
-                                t_name = str(t)
-                                t_date = 'N/A'
-
-                            is_match = False
-                            if basename.lower() in t_name.lower():
-                                is_match = True
-                            else:
-                                for mb in clean_main_branches:
-                                    if mb and mb.lower() in t_name.lower():
-                                        is_match = True
-                                        break
-
-                            if is_match and t_date != 'N/A':
-                                all_dates.add(t_date[:10])
-
-        dest_str = ", ".join(sorted(list(all_dest_countries))) if all_dest_countries else "N/A"
-        orig_str = ", ".join(sorted(list(all_origins))) if all_origins else "N/A"
-        date_str = ", ".join(sorted(list(all_dates))) if all_dates else "N/A"
-        actor_str = ", ".join(sorted(list(all_actors))) if all_actors else "N/A"
-        mb_str = main_branch_str if main_branch_str else "N/A"
-
-        record = f"| {malware_link} | {dest_str} | {orig_str} | {date_str} | {actor_str} | {mb_str} | {capabilities_str} |"
-        flat_data.append((mb_str, basename, record))
+        flat_data.append([file_link, dst_str, orig_str, date_str, act_str, mb_str, cap_str])
 
     if not flat_data:
-        return "*No data found for Malware.*"
+        return "Nessun dato trovato in TTP_&_Malware"
 
-    flat_data.sort(key=lambda x: (x[0], x[1]))
+    md = "## TTP & Malware\n\n"
+    md += "| File Malware | Dest Countries | Origin | Date detection | Threat Actor | MainBranch | Capabilities |\n"
+    md += "|---|---|---|---|---|---|---|\n"
+    for item in sorted(flat_data, key=lambda x: x[0]):
+        md += "| " + " | ".join(item) + " |\n"
 
-    final_md = "## TTP & Malware (All MainBranches)\n\n"
-    final_md += "| File Malware | Dest Countries | Origin | Date detection | Threat Actor | MainBranch | Capabilities |\n"
-    final_md += "|---|---|---|---|---|---|---|\n"
+    return md + "\n"
+
+def build_actors_table(paths_index):
+    if not os.path.exists(MALWARE_DIR):
+        return "Nessun dato trovato."
+
+    flat_data = []
+
+    for filename in os.listdir(MALWARE_DIR):
+        if not filename.endswith('.md'): continue
+        if filename.lower() == 'index.md': continue
+
+        filepath = os.path.join(MALWARE_DIR, filename)
+        basename = filename[:-3]
+
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = extract_yaml(f.read())
+        if not data: continue
+
+        countries = parse_array(data.get('dst_countries'))
+        if not countries: continue
+
+        actors = parse_array(data.get('threat_actor'))
+        if not actors: actors = ["Unknown Actor"]
+
+        activityName = f"[{basename}](./{paths_index.get(basename.lower(), filepath)})"
+
+        date_raw = data.get('date_detection')
+        date_str = str(date_raw)[:10] if date_raw else "N/A"
+
+        mb = parse_array(data.get('mainbranch'))
+        mb_str = ", ".join(make_md_link(x, paths_index) for x in mb) if mb else "N/A"
+
+        target = parse_array(data.get('target_industry'))
+        target_str = ", ".join(str(x) for x in target) if target else "N/A"
+
+        for c in countries:
+            c_name = str(c).strip()
+            if not c_name: continue
+
+            for a in actors:
+                a_name = str(a).strip()
+                a_link = make_md_link(a_name, paths_index) if a_name != "Unknown Actor" else "Unknown Actor"
+
+                flat_data.append({
+                    "country": c_name,
+                    "actor": a_link,
+                    "activity": activityName,
+                    "date": date_str,
+                    "mainBranch": mb_str,
+                    "target": target_str
+                })
+
+    groups = defaultdict(lambda: defaultdict(list))
     for item in flat_data:
-        final_md += item[2] + "\n"
-    final_md += "\n"
+        groups[item['country']][item['actor']].append(item)
 
-    return final_md
+    if not groups:
+        return "Nessun dato trovato."
 
+    md = "## Actors Activity by Country\n\n"
+    for country in sorted(groups.keys()):
+        md += f"### {country}\n\n"
+        md += "| Actor | Activity | Date | MainBranch | Target |\n"
+        md += "|---|---|---|---|---|\n"
+
+        for actor in sorted(groups[country].keys()):
+            items = groups[country][actor]
+            activities = "<br>".join(i['activity'] for i in items)
+            dates = "<br>".join(i['date'] for i in items)
+            mbs = "<br>".join(i['mainBranch'] for i in items)
+            targets = "<br>".join(i['target'] for i in items)
+
+            md += f"| {actor} | {activities} | {dates} | {mbs} | {targets} |\n"
+        md += "\n"
+
+    return md
 
 def update_readme(new_content_md):
     if not os.path.exists(README_FILE):
@@ -297,22 +204,22 @@ def update_readme(new_content_md):
 
         with open(README_FILE, 'w', encoding='utf-8') as f:
             f.write(new_readme)
-        print("Done!")
+        print("Done! README updated.")
     else:
         print("Not Done! Markers <!-- TABELLA_START --> or <!-- TABELLA_END --> not found in README.md.")
 
 
 if __name__ == "__main__":
     print("Indexing Vault...")
-    paths_index, targets_index = build_vault_index()
-
-    print("Building Actors table...")
-    actors_md = build_actors_table(paths_index, targets_index)
+    paths_index = build_vault_index()
 
     print("Building Malware table...")
     malware_md = build_malware_table(paths_index)
 
-    combined_md = actors_md + "---\n\n" + malware_md
+    print("Building Actors by Country table...")
+    actors_md = build_actors_table(paths_index)
+
+    combined_md = malware_md + "---\n\n" + actors_md
 
     print("Updating README...")
     update_readme(combined_md)
